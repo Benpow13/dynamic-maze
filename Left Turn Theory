@@ -1,0 +1,62 @@
+Vex Dynamic Maze Code
+
+Left Turn Theory
+
+Completes the maze succesfully but slowly
+
+To do:
+Fix the robot not stopping on the red title at the end
+Revese the robot in via the fastest route
+
+
+
+
+#region VEXcode Generated Robot Configuration
+
+from vexcode_vr import *
+
+drivetrain = Drivetrain("drivetrain", 0)
+
+pen = Pen("pen", 8)   
+
+down_eye = EyeSensor("downEye", 5)  #colour dectector
+
+front_distance = Distance("frontdistance", 6)
+
+
+wall_distance = 250      #oepn space in mm  
+move_distance = 250      
+
+def main():
+     
+    pen.set_pen_width(EXTRA_THIN) 
+    pen.move(DOWN) #draw path
+    drivetrain.set_drive_velocity(150, PERCENT) #sets driving and turning speed
+    drivetrain.set_turn_velocity(150, PERCENT)
+
+    while True:
+        
+        if down_eye.detect(RED):   #stops when sees colour red, then will need to follow the path back
+            drivetrain.stop()
+            pen.move(UP)
+            stop_project()
+
+        drivetrain.turn_for(LEFT, 90, DEGREES) #turns left to check for space
+        d = front_distance.get_distance(MM)
+        if d is None:  #gets the distance compared to 250mm using 5000 to ensure no uncertainty
+            d = 5000
+
+        if d > wall_distance:   #if space is greater than 250 move forward
+            drivetrain.drive_for(FORWARD, move_distance, MM) 
+        else:
+            drivetrain.turn_for(RIGHT, 90, DEGREES) #if there is no space left centre the robot
+            d = front_distance.get_distance(MM) 
+            if d is None:
+                d = 5000
+            if d > wall_distance:
+                drivetrain.drive_for(FORWARD, move_distance, MM) 
+            else:
+                drivetrain.turn_for(RIGHT, 90, DEGREES) #if no space forward/left check to the right
+
+        wait(5, MSEC) 
+vr_thread(main)
