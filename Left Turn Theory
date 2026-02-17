@@ -11,7 +11,7 @@ Revese the robot in via the fastest route
 
 
 
-#region VEXcode Generated Robot Configuration
+
 
 from vexcode_vr import *
 
