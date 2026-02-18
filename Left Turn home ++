@@ -1,0 +1,111 @@
+Only turns left till it reaches "red" folliws the trimmed cords home then going the fastest route back and back again 
+
+To do: 
+explore whole maze left turn only
+map the maze
+
+import math
+from vexcode_vr import *
+
+drivetrain = Drivetrain("drivetrain", 0)
+pen = Pen("pen", 8)
+down_eye = EyeSensor("downEye", 5) # colour detector
+front_distance = Distance("frontdistance", 6)
+location = Location("location", 9)
+
+wall_distance = 250 #open space in mm  
+move_distance = 250
+
+tolerance_mm = 6
+small_moves = 5
+
+def go_to(x_target, y_target):
+    x_now = location.position(X, MM) #sets driving to location but recording its current location
+    y_now = location.position(Y, MM)
+    dx = x_target - x_now #check difference between target location
+    dy = y_target - y_now
+    dist = math.sqrt(dx * dx + dy * dy) #checks straight line distance to target
+    if dist < small_moves: #checks if its already if so cancel
+        return
+
+    heading = math.degrees(math.atan2(dx, dy)) #returns the angle of the vector compared to the axis 
+    if heading < 0:  #when driving back ensures its facing the right direction
+        heading += 360
+
+    drivetrain.turn_to_heading(heading, DEGREES) #turn to face target then drive at it
+    drivetrain.drive_for(FORWARD, dist, MM)
+
+def record_point(path):  #stores all current and previous path location
+    x_now = location.position(X, MM)
+    y_now = location.position(Y, MM)
+    path.append([x_now, y_now])  #adds current point
+    if len(path) >= 4: #checks enough points exsist
+        last = path[-1]
+        for i in range(len(path) - 2): #if the robot returned to an ealier point delete that section of the loop 
+            if abs(path[i][0] - last[0]) < small_moves and abs(path[i][1] - last[1]) < small_moves:
+                path[:] = path[: i + 1]
+                break
+
+def return_home_then_red_then_home(path):
+    
+    drivetrain.stop()
+    wait(50, MSEC) 
+    pen.set_pen_color(BLACK)
+    for x_t, y_t in reversed(path): #head home through saved trimmed cords 
+        go_to(x_t, y_t)
+    drivetrain.stop() #stops at home
+    wait(200, MSEC)
+
+    
+    pen.set_pen_color(GREEN)
+    for x_t, y_t in path:
+        go_to(x_t, y_t) #back to the end title via the safe path
+    drivetrain.stop()
+    wait(200, MSEC)
+
+   
+    pen.set_pen_color(BLACK)
+    for x_t, y_t in reversed(path): #drive back to home square to complete the program
+        go_to(x_t, y_t)
+    drivetrain.stop()
+    pen.move(UP)
+    stop_project()
+
+def main():
+    pen.set_pen_width(THIN)
+    pen.set_pen_color(BLUE)
+    pen.move(DOWN)
+
+    drivetrain.set_drive_velocity(150, PERCENT)
+    drivetrain.set_turn_velocity(150, PERCENT)
+
+    path = [] # record starting point
+    record_point(path)
+
+    while True:
+        if down_eye.detect(RED):   #starst return path if sees red 
+            return_home_then_red_then_home(path)
+
+        drivetrain.turn_for(LEFT, 90, DEGREES) #turns left to check for space
+        d = front_distance.get_distance(MM)
+        if d is None:
+            d = 5000 #gets the distance compared to 250mm using 5000 to ensure no uncertainty
+
+        if d > wall_distance:
+            drivetrain.drive_for(FORWARD, move_distance, MM) #if space is greater than 250 move forward
+            record_point(path)
+        else:
+            drivetrain.turn_for(RIGHT, 90, DEGREES) #if there is no space left centre the robot
+            d = front_distance.get_distance(MM)
+            if d is None:
+                d = 5000
+
+            if d > wall_distance:
+                drivetrain.drive_for(FORWARD, move_distance, MM)
+                record_point(path)
+            else:
+                drivetrain.turn_for(RIGHT, 90, DEGREES). #if no space forward/left check to the right
+
+        wait(5, MSEC)
+
+vr_thread(main)
