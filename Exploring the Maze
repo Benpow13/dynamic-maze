@@ -1,3 +1,101 @@
 Based off the left theory
 
 Robot will explore the left then return home and then explore the right and return home
+
+Robot is still not deteching "red" when reaching the end as it has already moved past the square 
+
+To do:
+invert my left turn code to right and paste in "else" at the bottom.
+map the fastest after having explored left and right
+Follow the pen home after taking the fast route
+
+
+from vexcode_vr import *
+
+location = Location("location", 9)
+drivetrain = Drivetrain("drivetrain", 0)
+pen = Pen("pen", 8)   
+down_eye = EyeSensor("downEye", 5)  #colour dectector
+front_distance = Distance("frontdistance", 6)
+
+wall_distance = 250      # open space in mm  
+move_distance = 250      
+
+def main():
+     
+    pen.set_pen_width(EXTRA_THIN) 
+    pen.move(DOWN) #draw path
+    drivetrain.set_drive_velocity(150, PERCENT) #sets driving and turning speed
+    drivetrain.set_turn_velocity(150, PERCENT)
+
+    
+    mode_left = 0
+    mode_right = 1.  #left turn and right turn modes
+    mode = mode_left
+
+    
+    start_x = 130    # starting coords
+    start_y = -900
+    
+
+    
+    left_start_area = True
+
+    def at_start():
+        x = location.position(X, MM)
+        y = location.position(Y, MM)
+        return abs(x - start_x) < TOL and abs(y - start_y) < TOL
+
+    while True:
+
+        
+        if down_eye.detect(RED):
+            drivetrain.stop()
+            pen.move(UP)
+            stop_project()
+
+        
+        at_home = at_start() #mode switch
+
+        
+        if not at_home:
+            left_start_area = False #allows return
+
+       
+        if at_home and not left_start_area:
+            if mode == mode_left:
+                
+                mode = mode_right #first return
+                left_start_area = True   
+            else:
+                drivetrain.stop() #stop after second return
+                pen.move(UP)
+                stop_project()
+
+       
+       
+        if mode == mode_left:
+            drivetrain.turn_for(LEFT, 90, DEGREES) #turns left to check for space
+            d = front_distance.get_distance(MM)
+            if d is None:  #gets the distance compared to 250mm using 5000 to ensure no uncertainty
+                d = 5000
+
+            if d > wall_distance:   #if space is greater than 250 move forward
+                drivetrain.drive_for(FORWARD, move_distance, MM) 
+            else:
+                drivetrain.turn_for(RIGHT, 90, DEGREES) #if there is no space left centre the robot
+                d = front_distance.get_distance(MM) 
+                if d is None:
+                    d = 5000
+                if d > wall_distance:
+                    drivetrain.drive_for(FORWARD, move_distance, MM) 
+                else:
+                    drivetrain.turn_for(RIGHT, 90, DEGREES) #if no space forward/left check to the right
+
+        else:
+          
+            pass
+
+        wait(5, MSEC)
+
+vr_thread(main)
