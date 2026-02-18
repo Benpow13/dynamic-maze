@@ -46,7 +46,7 @@ def record_point(path):  #stores all current and previous path location
                 path[:] = path[: i + 1]
                 break
 
-def return_home_then_red_then_home(path):
+def return_home(path):
     
     drivetrain.stop()
     wait(50, MSEC) 
@@ -56,14 +56,12 @@ def return_home_then_red_then_home(path):
     drivetrain.stop() #stops at home
     wait(200, MSEC)
 
-    
     pen.set_pen_color(GREEN)
     for x_t, y_t in path:
         go_to(x_t, y_t) #back to the end title via the safe path
     drivetrain.stop()
     wait(200, MSEC)
 
-   
     pen.set_pen_color(BLACK)
     for x_t, y_t in reversed(path): #drive back to home square to complete the program
         go_to(x_t, y_t)
@@ -84,7 +82,7 @@ def main():
 
     while True:
         if down_eye.detect(RED):   #starst return path if sees red 
-            return_home_then_red_then_home(path)
+            return_home(path)
 
         drivetrain.turn_for(LEFT, 90, DEGREES) #turns left to check for space
         d = front_distance.get_distance(MM)
@@ -104,7 +102,7 @@ def main():
                 drivetrain.drive_for(FORWARD, move_distance, MM)
                 record_point(path)
             else:
-                drivetrain.turn_for(RIGHT, 90, DEGREES). #if no space forward/left check to the right
+                drivetrain.turn_for(RIGHT, 90, DEGREES) #if no space forward/left check to the right
 
         wait(5, MSEC)
 
