@@ -17,6 +17,12 @@ To make sure the robot takes the fastest route to and from the start, I have add
 
 Once the robot has reached the red tile, it will begin its journey back but will need to know which direction to face. This is solved using the atan2 function, which calculates the displacement vector in relation to the next coordinate required. The robot will then turn to face that direction and drive forward. This process is repeated until it reaches the starting square.
 
+References
+
+https://api.vex.com/vr/home/playgrounds/dynamic_wall_maze.html
+https://en.wikipedia.org/wiki/Shortest_path_problem
+https://docs.python.org/3/library/math.html#math.atan2
+https://education.vex.com/stemlabs/vr/vr-activity-labs
 
 
 
