@@ -22,10 +22,10 @@ small_moves = 5
 def go_to(x_target, y_target):
     x_now = location.position(X, MM) #sets driving to location but recording its current location
     y_now = location.position(Y, MM)
-    dx = x_target - x_now #check difference between target location
+    dx = x_target - x_now #check the displacement vector between the target location
     dy = y_target - y_now
     dist = math.sqrt(dx * dx + dy * dy) #checks straight line distance to target
-    if abs(dx) < tolerance_mm and abs(dy) < tolerance_mm: #checks if its already if so cancel
+    if dist < small_moves: #checks if its already if so cancel
         return
 
     heading = math.degrees(math.atan2(dx, dy)) #returns the angle of the vector compared to the axis 
@@ -35,20 +35,16 @@ def go_to(x_target, y_target):
     drivetrain.turn_to_heading(heading, DEGREES) #turn to face target then drive at it
     drivetrain.drive_for(FORWARD, dist, MM)
 
-def record_point(path):  #stores all current and previous path location
+def record_point(path):  #if a successful move forward is made this records the cords of that point
     x_now = location.position(X, MM)
     y_now = location.position(Y, MM)
     path.append([x_now, y_now])  #adds current point
     if len(path) >= 4: #checks enough points exsist
-        last_x, last_y = path[-1]
-        cut_at = None
+        last = path[-1]
         for i in range(len(path) - 2): #if the robot returned to an ealier point delete that section of the loop 
-            px, py = path[i]
-            if abs(px - last_x) < tolerance_mm and abs(py - last_y) < tolerance_mm:
-                cut_at = i
+            if abs(path[i][0] - last[0]) < small_moves and abs(path[i][1] - last[1]) < small_moves:
+                path[:] = path[: i + 1]
                 break
-        if cut_at is not None:
-            path[:] = path[: cut_at + 1]
 
 def return_home(path):
     
@@ -58,8 +54,6 @@ def return_home(path):
     for x_t, y_t in reversed(path): #head home through saved trimmed cords 
         go_to(x_t, y_t)
     drivetrain.stop() #stops at home
-    go_to(path[0][0], path[0][1])
-
     wait(200, MSEC)
 
     pen.set_pen_color(GREEN)
@@ -83,7 +77,7 @@ def main():
     drivetrain.set_drive_velocity(150, PERCENT)
     drivetrain.set_turn_velocity(150, PERCENT)
 
-    path = [] # record starting point
+    path = [] # record starting point to return to
     record_point(path)
 
     while True:
@@ -103,10 +97,14 @@ def main():
             d = front_distance.get_distance(MM)
             if d is None:
                 d = 5000
+
             if d > wall_distance:
                 drivetrain.drive_for(FORWARD, move_distance, MM)
                 record_point(path)
             else:
                 drivetrain.turn_for(RIGHT, 90, DEGREES) #if no space forward/left check to the right
+
         wait(5, MSEC)
+
 vr_thread(main)
+
