@@ -1,8 +1,5 @@
 Only turns left till it reaches "red" folliws the trimmed cords home then going the fastest route back and back again 
 
-To do: 
-explore whole maze left turn only
-map the maze
 
 import math
 from vexcode_vr import *
